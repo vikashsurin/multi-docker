@@ -1,0 +1,25 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t vikashsurin/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true vikashsurin/react-test yarn test
+
+after_success:
+  - docker build -t vikashsurin/mutli-client ./client
+  - docker build -t vikashsurin/mutli-nginx ./nginx
+  - docker build -t vikashsurin/mutli-server ./server
+  - docker build -t vikashsurin/mutli-worker ./worker
+
+  # Login credentials
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID"  --password-stdin
+
+  # Take those images and push them to docker hub
+  - docker push vikashsurin/mutli-client
+  - docker push vikashsurin/mutli-nginx
+  - docker push vikashsurin/mutli-server
+  - docker push vikashsurin/mutli-worker
